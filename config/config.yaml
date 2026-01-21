@@ -1,0 +1,17 @@
+llm:
+  provider: "openai"  # or "local"
+  model: "gpt-4o-mini"
+  temperature: 0.1
+  
+embeddings:
+  model: "sentence-transformers/all-MiniLM-L6-v2"
+  use_gpu: false
+
+parsing:
+  extract_sections: true
+  max_tokens: 4000
+
+output:
+  save_embeddings: true
+  save_intermediate: true
+  blog_template: "professional"

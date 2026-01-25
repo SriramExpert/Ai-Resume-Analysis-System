@@ -1,8 +1,8 @@
 llm:
-  provider: "openai"  # or "local"
-  model: "gpt-4o-mini"
+  provider: gemini
+  model: gemini-2.5-flash
   temperature: 0.1
-  
+
 embeddings:
   model: "sentence-transformers/all-MiniLM-L6-v2"
   use_gpu: false

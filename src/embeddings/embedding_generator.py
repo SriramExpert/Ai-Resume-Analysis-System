@@ -1,18 +1,25 @@
 import numpy as np
 from typing import List, Dict, Any, Tuple
-from sentence_transformers import SentenceTransformer
+from fastembed import TextEmbedding
 import hashlib
 import json
 
 class EmbeddingGenerator:
-    """Generate embeddings for resumes"""
+    """Generate embeddings for resumes using FastEmbed"""
     
-    def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2"):
-        self.model = SentenceTransformer(model_name)
+    def __init__(self, model_name: str = "BAAI/bge-small-en-v1.5"):
+        self.model = TextEmbedding(model_name=model_name)
     
     def generate_document_embedding(self, text: str) -> np.ndarray:
         """Generate embedding for entire document"""
-        return self.model.encode(text)
+        # fastembed.embed returns a generator, we take the first element
+        return next(self.model.embed([text]))
+    
+    def generate_query_embedding(self, text: str) -> np.ndarray:
+        """Generate embedding for a query"""
+        # For BGE, document and query embeddings are often the same, 
+        # but adding this for API compatibility
+        return self.generate_document_embedding(text)
     
     def generate_section_embeddings(self, resume_data: Dict) -> Dict[str, np.ndarray]:
         """Generate embeddings for different sections"""
@@ -25,7 +32,7 @@ class EmbeddingGenerator:
         # Tech stack embedding
         tech_text = " ".join(resume_data.get('tech_stack', []))
         if tech_text:
-            embeddings['tech_stack'] = self.model.encode(tech_text)
+            embeddings['tech_stack'] = next(self.model.embed([tech_text]))
         
         # Experience embedding
         exp_text = " ".join([
@@ -33,12 +40,12 @@ class EmbeddingGenerator:
             for exp in resume_data.get('experience', [])
         ])
         if exp_text:
-            embeddings['experience'] = self.model.encode(exp_text)
+            embeddings['experience'] = next(self.model.embed([exp_text]))
         
         # Skills embedding
         skills_text = self._compile_skills_text(resume_data.get('skills', {}))
         if skills_text:
-            embeddings['skills'] = self.model.encode(skills_text)
+            embeddings['skills'] = next(self.model.embed([skills_text]))
         
         return embeddings
     

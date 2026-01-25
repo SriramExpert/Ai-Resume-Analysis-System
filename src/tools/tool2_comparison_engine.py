@@ -215,23 +215,20 @@ class ComparisonEngine:
         return similarity_matrix
     
     def _calculate_experience_similarity(self, resumes_data: List[Dict]) -> List[List[float]]:
-        """Calculate experience similarity based on role titles"""
-        # Simple implementation using word embeddings
-        from sklearn.feature_extraction.text import TfidfVectorizer
-        
+        """Calculate experience similarity based on role titles and descriptions using FastEmbed"""
         # Collect all role descriptions
-        role_texts = []
+        exp_embeddings = []
         for resume in resumes_data:
-            roles_text = " ".join([
-                f"{exp.get('title', '')} {exp.get('description', '')}"
-                for exp in resume.get('experience', [])
-            ])
-            role_texts.append(roles_text)
+            # Generate or retrieve experience embedding
+            embeddings = self.embedding_generator.generate_section_embeddings(resume)
+            if 'experience' in embeddings:
+                exp_embeddings.append(embeddings['experience'])
+            else:
+                # Fallback to full document if no specific experience found
+                exp_embeddings.append(embeddings['full_document'])
         
-        if len(role_texts) > 1 and any(role_texts):
-            vectorizer = TfidfVectorizer()
-            tfidf_matrix = vectorizer.fit_transform(role_texts)
-            similarity = cosine_similarity(tfidf_matrix)
+        if len(exp_embeddings) > 1:
+            similarity = cosine_similarity(exp_embeddings)
             return similarity.tolist()
         
         return [[1.0 if i == j else 0.0 for j in range(len(resumes_data))] 
